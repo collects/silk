@@ -8,7 +8,6 @@
 #Platform detection and settings
 
 BUILD_OS := $(shell uname | sed -e 's/^.*Darwin.*/MacOS-X/ ; s/^.*CYGWIN.*/Windows/')
-
 BUILD_ARCHITECTURE := $(shell uname -m | sed -e 's/i686/i386/')
 
 EXESUFFIX = 
@@ -17,51 +16,29 @@ LIBSUFFIX = .a
 OBJSUFFIX = .o
 
 CC     = $(TOOLCHAIN_PREFIX)gcc$(TOOLCHAIN_SUFFIX)
-CXX    = $(TOOLCHAIN_PREFIX)g++$(TOOLCHAIN_SUFFIX)
 AR     = $(TOOLCHAIN_PREFIX)ar
 RANLIB = $(TOOLCHAIN_PREFIX)ranlib
 CP     = $(TOOLCHAIN_PREFIX)cp
 
-cppflags-from-defines 	= $(addprefix -D,$(1))
-cppflags-from-includes 	= $(addprefix -I,$(1))
-ldflags-from-ldlibdirs 	= $(addprefix -L,$(1))
-ldlibs-from-libs 	= $(addprefix -l,$(1))
-
-
-# Helper to make MIPS Big Endian testing easier
-ifeq (yes,$(MIPS))
-	CFLAGS += -D_SYSTEM_IS_BIG_ENDIAN -meb -mips32
-endif
-
-ifeq (yes,$(MIPSEL))
-	CFLAGS += -mel -mips32
-	LDFLAGS += -mel -mips32
-endif
-
+cflags-from-defines    = $(addprefix -D,$(1))
+cflags-from-includes   = $(addprefix -I,$(1))
+ldflags-from-ldlibdirs = $(addprefix -L,$(1))
+ldlibs-from-libs       = $(addprefix -l,$(1))
 
 CFLAGS	+= -Wall -enable-threads -O3
 
-CFLAGS  += $(call cppflags-from-defines,$(CDEFINES))
-CFLAGS  += $(call cppflags-from-defines,$(ADDED_DEFINES))
-CFLAGS  += $(call cppflags-from-includes,$(CINCLUDES))
+CFLAGS  += $(call cflags-from-defines,$(CDEFINES))
+CFLAGS  += $(call cflags-from-defines,$(ADDED_DEFINES))
+CFLAGS  += $(call cflags-from-includes,$(CINCLUDES))
 LDFLAGS += $(call ldflags-from-ldlibdirs,$(LDLIBDIRS))
 LDLIBS  += $(call ldlibs-from-libs,$(LIBS))
 
-COMPILE.c.cmdline   = $(CC) -c $(CFLAGS) $(ADDED_CFLAGS) -o $@ $<
-COMPILE.S.cmdline   = $(CC) -c $(CFLAGS) $(ADDED_CFLAGS) -o $@ $<
-COMPILE.cpp.cmdline = $(CXX) -c $(CFLAGS) $(ADDED_CFLAGS) -o $@ $<
-LINK.o              = $(CXX) $(LDPREFLAGS) $(LDFLAGS)
-LINK.o.cmdline      = $(LINK.o) $^ $(LDLIBS) -o $@$(EXESUFFIX) 
+COMPILE.c.cmdline   = $(CC) -c $(CFLAGS) -o $@ $<
+LINK.o.cmdline      = $(LINK.o) $^ $(LDLIBS) -lm -o $@$(EXESUFFIX) 
 ARCHIVE.cmdline     = $(AR) $(ARFLAGS) $@ $^ && $(RANLIB) $@
 
 %$(OBJSUFFIX):%.c
 	$(COMPILE.c.cmdline)
-
-%$(OBJSUFFIX):%.cpp
-	$(COMPILE.cpp.cmdline)
-	
-%$(OBJSUFFIX):%.S
-	$(COMPILE.S.cmdline)	
 
 # Directives
 
@@ -77,13 +54,9 @@ VPATH = ./ \
 LIB_NAME = SKP_SILK_SDK
 TARGET = $(LIBPREFIX)$(LIB_NAME)$(LIBSUFFIX)
 
-SRCS_C = $(wildcard src/*.c) 
-ifneq (,$(TOOLCHAIN_PREFIX))
-	SRCS_S = $(wildcard src/*.S)
-	OBJS := $(patsubst %.c,%$(OBJSUFFIX),$(SRCS_C)) $(patsubst %.S,%$(OBJSUFFIX),$(SRCS_S))
-else
-	OBJS := $(patsubst %.c,%$(OBJSUFFIX),$(SRCS_C))
-endif
+SRCS_C = $(wildcard src/*.c)
+
+OBJS := $(patsubst %.c,%$(OBJSUFFIX),$(SRCS_C))
 
 ENCODER_SRCS_C = test/Encoder.c
 ENCODER_OBJS := $(patsubst %.c,%$(OBJSUFFIX),$(ENCODER_SRCS_C))

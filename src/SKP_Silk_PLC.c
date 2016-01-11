@@ -162,9 +162,6 @@ void SKP_Silk_PLC_conceal(
     SKP_int32 energy1, energy2, *rand_ptr, *pred_lag_ptr;
     SKP_int32 sig_Q10[ MAX_FRAME_LENGTH ], *sig_Q10_ptr, LPC_exc_Q10, LPC_pred_Q10,  LTP_pred_Q14;
     SKP_Silk_PLC_struct *psPLC;
-#if !defined(_SYSTEM_IS_BIG_ENDIAN)
-    SKP_int32 Atmp;
-#endif
     psPLC = &psDec->sPLC;
 
     /* Update LTP buffer */
@@ -292,32 +289,6 @@ void SKP_Silk_PLC_conceal(
     for( k = 0; k < NB_SUBFR; k++ ) {
         for( i = 0; i < psDec->subfr_length; i++ ){
             /* partly unrolled */
-#if !defined(_SYSTEM_IS_BIG_ENDIAN)
-            /* NOTE: the code below loads two int16 values in an int32, and multiplies each using the   */
-            /* SMLAWB and SMLAWT instructions. On a big-endian CPU the two int16 variables would be     */
-            /* loaded in reverse order and the code will give the wrong result. In that case swapping   */
-            /* the SMLAWB and SMLAWT instructions should solve the problem.                             */
-            Atmp = A_Q12_tmp.as_int32[ 0 ];    /* read two coefficients at once */
-            LPC_pred_Q10 = SKP_SMULWB(               psDec->sLPC_Q14[ MAX_LPC_ORDER + i -  1 ], Atmp );
-            LPC_pred_Q10 = SKP_SMLAWT( LPC_pred_Q10, psDec->sLPC_Q14[ MAX_LPC_ORDER + i -  2 ], Atmp );
-            Atmp = A_Q12_tmp.as_int32[ 1 ];
-            LPC_pred_Q10 = SKP_SMLAWB( LPC_pred_Q10, psDec->sLPC_Q14[ MAX_LPC_ORDER + i -  3 ], Atmp );
-            LPC_pred_Q10 = SKP_SMLAWT( LPC_pred_Q10, psDec->sLPC_Q14[ MAX_LPC_ORDER + i -  4 ], Atmp );
-            Atmp = A_Q12_tmp.as_int32[ 2 ];
-            LPC_pred_Q10 = SKP_SMLAWB( LPC_pred_Q10, psDec->sLPC_Q14[ MAX_LPC_ORDER + i -  5 ], Atmp );
-            LPC_pred_Q10 = SKP_SMLAWT( LPC_pred_Q10, psDec->sLPC_Q14[ MAX_LPC_ORDER + i -  6 ], Atmp );
-            Atmp = A_Q12_tmp.as_int32[ 3 ];
-            LPC_pred_Q10 = SKP_SMLAWB( LPC_pred_Q10, psDec->sLPC_Q14[ MAX_LPC_ORDER + i -  7 ], Atmp );
-            LPC_pred_Q10 = SKP_SMLAWT( LPC_pred_Q10, psDec->sLPC_Q14[ MAX_LPC_ORDER + i -  8 ], Atmp );
-            Atmp = A_Q12_tmp.as_int32[ 4 ];
-            LPC_pred_Q10 = SKP_SMLAWB( LPC_pred_Q10, psDec->sLPC_Q14[ MAX_LPC_ORDER + i -  9 ], Atmp );
-            LPC_pred_Q10 = SKP_SMLAWT( LPC_pred_Q10, psDec->sLPC_Q14[ MAX_LPC_ORDER + i - 10 ], Atmp );
-            for( j = 10 ; j < psDec->LPC_order ; j+=2 ) {
-                Atmp = A_Q12_tmp.as_int32[ j / 2 ];
-                LPC_pred_Q10 = SKP_SMLAWB( LPC_pred_Q10, psDec->sLPC_Q14[ MAX_LPC_ORDER + i -  1 - j ], Atmp );
-                LPC_pred_Q10 = SKP_SMLAWT( LPC_pred_Q10, psDec->sLPC_Q14[ MAX_LPC_ORDER + i -  2 - j ], Atmp );
-            }
-#else
             LPC_pred_Q10 = SKP_SMULWB(               psDec->sLPC_Q14[ MAX_LPC_ORDER + i -  1 ], A_Q12_tmp.as_int16[ 0 ] );
             LPC_pred_Q10 = SKP_SMLAWB( LPC_pred_Q10, psDec->sLPC_Q14[ MAX_LPC_ORDER + i -  2 ], A_Q12_tmp.as_int16[ 1 ] );
             LPC_pred_Q10 = SKP_SMLAWB( LPC_pred_Q10, psDec->sLPC_Q14[ MAX_LPC_ORDER + i -  3 ], A_Q12_tmp.as_int16[ 2 ] );
@@ -332,7 +303,6 @@ void SKP_Silk_PLC_conceal(
             for( j = 10; j < psDec->LPC_order; j++ ) {
                 LPC_pred_Q10 = SKP_SMLAWB( LPC_pred_Q10, psDec->sLPC_Q14[ MAX_LPC_ORDER + i - j - 1 ], A_Q12_tmp.as_int16[ j ] );
             }
-#endif
             /* Add prediction to LPC residual */
             sig_Q10_ptr[ i ] = SKP_ADD32( sig_Q10_ptr[ i ], LPC_pred_Q10 );
                 

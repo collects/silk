@@ -340,12 +340,6 @@ SKP_INLINE void SKP_Silk_noise_shape_quantizer_del_dec(
     NSQ_sample_struct  psSampleState[ MAX_DEL_DEC_STATES ][ 2 ];
     NSQ_del_dec_struct *psDD;
     NSQ_sample_struct  *psSS;
-#if !defined(_SYSTEM_IS_BIG_ENDIAN)
-    SKP_int32   a_Q12_tmp[ MAX_LPC_ORDER / 2 ], Atmp;
-
-    /* Preload LPC coeficients to array on stack. Gives small performance gain */
-    SKP_memcpy( a_Q12_tmp, a_Q12, predictLPCOrder * sizeof( SKP_int16 ) );
-#endif
 
     shp_lag_ptr  = &NSQ->sLTP_shp_Q10[ NSQ->sLTP_shp_buf_idx - lag + HARM_SHAPE_FIR_TAPS / 2 ];
     pred_lag_ptr = &sLTP_Q16[ NSQ->sLTP_buf_idx - lag + LTP_ORDER / 2 ];
@@ -396,29 +390,6 @@ SKP_INLINE void SKP_Silk_noise_shape_quantizer_del_dec(
             SKP_assert( predictLPCOrder >= 10 );            /* check that unrolling works */
             SKP_assert( ( predictLPCOrder  & 1 ) == 0 );    /* check that order is even */
             SKP_assert( ( ( ( int )( ( char* )( a_Q12 ) - ( ( char* ) 0 ) ) ) & 3 ) == 0 );    /* check that array starts at 4-byte aligned address */
-#if !defined(_SYSTEM_IS_BIG_ENDIAN)
-            /* Partially unrolled */
-            Atmp = a_Q12_tmp[ 0 ];          /* read two coefficients at once */
-            LPC_pred_Q10 = SKP_SMULWB(               psLPC_Q14[  0 ], Atmp );
-            LPC_pred_Q10 = SKP_SMLAWT( LPC_pred_Q10, psLPC_Q14[ -1 ], Atmp );
-            Atmp = a_Q12_tmp[ 1 ];
-            LPC_pred_Q10 = SKP_SMLAWB( LPC_pred_Q10, psLPC_Q14[ -2 ], Atmp );
-            LPC_pred_Q10 = SKP_SMLAWT( LPC_pred_Q10, psLPC_Q14[ -3 ], Atmp );
-            Atmp = a_Q12_tmp[ 2 ];
-            LPC_pred_Q10 = SKP_SMLAWB( LPC_pred_Q10, psLPC_Q14[ -4 ], Atmp );
-            LPC_pred_Q10 = SKP_SMLAWT( LPC_pred_Q10, psLPC_Q14[ -5 ], Atmp );
-            Atmp = a_Q12_tmp[ 3 ];
-            LPC_pred_Q10 = SKP_SMLAWB( LPC_pred_Q10, psLPC_Q14[ -6 ], Atmp );
-            LPC_pred_Q10 = SKP_SMLAWT( LPC_pred_Q10, psLPC_Q14[ -7 ], Atmp );
-            Atmp = a_Q12_tmp[ 4 ];
-            LPC_pred_Q10 = SKP_SMLAWB( LPC_pred_Q10, psLPC_Q14[ -8 ], Atmp );
-            LPC_pred_Q10 = SKP_SMLAWT( LPC_pred_Q10, psLPC_Q14[ -9 ], Atmp );
-            for( j = 10; j < predictLPCOrder; j += 2 ) {
-                Atmp = a_Q12_tmp[ j >> 1 ]; /* read two coefficients at once */
-                LPC_pred_Q10 = SKP_SMLAWB( LPC_pred_Q10, psLPC_Q14[ -j     ], Atmp );
-                LPC_pred_Q10 = SKP_SMLAWT( LPC_pred_Q10, psLPC_Q14[ -j - 1 ], Atmp );
-            }
-#else
             /* Partially unrolled */
             LPC_pred_Q10 = SKP_SMULWB(               psLPC_Q14[  0 ], a_Q12[ 0 ] );
             LPC_pred_Q10 = SKP_SMLAWB( LPC_pred_Q10, psLPC_Q14[ -1 ], a_Q12[ 1 ] );
@@ -433,7 +404,6 @@ SKP_INLINE void SKP_Silk_noise_shape_quantizer_del_dec(
             for( j = 10; j < predictLPCOrder; j ++ ) {
                 LPC_pred_Q10 = SKP_SMLAWB( LPC_pred_Q10, psLPC_Q14[ -j ], a_Q12[ j ] );
             }
-#endif
 
             /* Noise shape feedback */
             SKP_assert( ( shapingLPCOrder & 1 ) == 0 );   /* check that order is even */

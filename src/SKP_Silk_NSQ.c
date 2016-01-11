@@ -198,11 +198,6 @@ SKP_INLINE void SKP_Silk_noise_shape_quantizer(
     SKP_int32   dither, exc_Q10, LPC_exc_Q10, xq_Q10;
     SKP_int32   tmp1, tmp2, sLF_AR_shp_Q10;
     SKP_int32   *psLPC_Q14, *shp_lag_ptr, *pred_lag_ptr;
-#if !defined(_SYSTEM_IS_BIG_ENDIAN)
-    SKP_int32   a_Q12_tmp[ MAX_LPC_ORDER / 2 ], Atmp;
-    /* Preload LPC coefficients to array on stack. Gives small performance gain */
-    SKP_memcpy( a_Q12_tmp, a_Q12, predictLPCOrder * sizeof( SKP_int16 ) );
-#endif
 
     shp_lag_ptr  = &NSQ->sLTP_shp_Q10[ NSQ->sLTP_shp_buf_idx - lag + HARM_SHAPE_FIR_TAPS / 2 ];
     pred_lag_ptr = &sLTP_Q16[ NSQ->sLTP_buf_idx - lag + LTP_ORDER / 2 ];
@@ -228,33 +223,6 @@ SKP_INLINE void SKP_Silk_noise_shape_quantizer(
         /* check that array starts at 4-byte aligned address */
         SKP_assert( ( ( SKP_int64 )( ( SKP_int8* )a_Q12 - ( SKP_int8* )0 ) & 3 ) == 0 );
         SKP_assert( predictLPCOrder >= 10 );            /* check that unrolling works */
-#if !defined(_SYSTEM_IS_BIG_ENDIAN)
-        /* NOTE: the code below loads two int16 values in an int32, and multiplies each using the   */
-        /* SMLAWB and SMLAWT instructions. On a big-endian CPU the two int16 variables would be     */
-        /* loaded in reverse order and the code will give the wrong result. In that case swapping   */
-        /* the SMLAWB and SMLAWT instructions should solve the problem.                             */
-        /* Partially unrolled */
-        Atmp = a_Q12_tmp[ 0 ];      /* read two coefficients at once */
-        LPC_pred_Q10 = SKP_SMULWB(               psLPC_Q14[  0 ], Atmp );
-        LPC_pred_Q10 = SKP_SMLAWT( LPC_pred_Q10, psLPC_Q14[ -1 ], Atmp );
-        Atmp = a_Q12_tmp[ 1 ];
-        LPC_pred_Q10 = SKP_SMLAWB( LPC_pred_Q10, psLPC_Q14[ -2 ], Atmp );
-        LPC_pred_Q10 = SKP_SMLAWT( LPC_pred_Q10, psLPC_Q14[ -3 ], Atmp );
-        Atmp = a_Q12_tmp[ 2 ];
-        LPC_pred_Q10 = SKP_SMLAWB( LPC_pred_Q10, psLPC_Q14[ -4 ], Atmp );
-        LPC_pred_Q10 = SKP_SMLAWT( LPC_pred_Q10, psLPC_Q14[ -5 ], Atmp );
-        Atmp = a_Q12_tmp[ 3 ];
-        LPC_pred_Q10 = SKP_SMLAWB( LPC_pred_Q10, psLPC_Q14[ -6 ], Atmp );
-        LPC_pred_Q10 = SKP_SMLAWT( LPC_pred_Q10, psLPC_Q14[ -7 ], Atmp );
-        Atmp = a_Q12_tmp[ 4 ];
-        LPC_pred_Q10 = SKP_SMLAWB( LPC_pred_Q10, psLPC_Q14[ -8 ], Atmp );
-        LPC_pred_Q10 = SKP_SMLAWT( LPC_pred_Q10, psLPC_Q14[ -9 ], Atmp );
-        for( j = 10; j < predictLPCOrder; j += 2 ) {
-            Atmp = a_Q12_tmp[ j >> 1 ];     /* read two coefficients at once */
-            LPC_pred_Q10 = SKP_SMLAWB( LPC_pred_Q10, psLPC_Q14[ -j     ], Atmp );
-            LPC_pred_Q10 = SKP_SMLAWT( LPC_pred_Q10, psLPC_Q14[ -j - 1 ], Atmp );
-        }
-#else
         /* Partially unrolled */
         LPC_pred_Q10 = SKP_SMULWB(               psLPC_Q14[  0 ], a_Q12[ 0 ] );
         LPC_pred_Q10 = SKP_SMLAWB( LPC_pred_Q10, psLPC_Q14[ -1 ], a_Q12[ 1 ] );
@@ -269,7 +237,6 @@ SKP_INLINE void SKP_Silk_noise_shape_quantizer(
         for( j = 10; j < predictLPCOrder; j ++ ) {
             LPC_pred_Q10 = SKP_SMLAWB( LPC_pred_Q10, psLPC_Q14[ -j ], a_Q12[ j ] );
         }
-#endif
         /* Long-term prediction */
         if( sigtype == SIG_TYPE_VOICED ) {
             /* Unrolled loop */

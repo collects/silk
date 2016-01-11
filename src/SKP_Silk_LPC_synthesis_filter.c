@@ -46,15 +46,6 @@ void SKP_Silk_LPC_synthesis_filter(
 {
     SKP_int   k, j, idx, Order_half = SKP_RSHIFT( Order, 1 );
     SKP_int32 SA, SB, out32_Q10, out32;
-#if !defined(_SYSTEM_IS_BIG_ENDIAN)
-    SKP_int32 Atmp, A_align_Q12[ SKP_Silk_MAX_ORDER_LPC >> 1 ];
-
-    /* combine two A_Q12 values and ensure 32-bit alignment */
-    for( k = 0; k < Order_half; k++ ) {
-        idx = SKP_SMULBB( 2, k );
-        A_align_Q12[ k ] = ( ( ( SKP_int32 )A_Q12[ idx ] ) & 0x0000ffff ) | SKP_LSHIFT( ( SKP_int32 )A_Q12[ idx + 1 ], 16 );
-    }
-#endif
 
     /* Order must be even */
     SKP_assert( 2 * Order_half == Order );
@@ -65,43 +56,19 @@ void SKP_Silk_LPC_synthesis_filter(
         out32_Q10 = 0;
         for( j = 0; j < ( Order_half - 1 ); j++ ) {
             idx = SKP_SMULBB( 2, j ) + 1;
-#if !defined(_SYSTEM_IS_BIG_ENDIAN)
-            /* multiply-add two prediction coefficients for each loop */
-            /* NOTE: the code below loads two int16 values in an int32, and multiplies each using the   */
-            /* SMLAWB and SMLAWT instructions. On a big-endian CPU the two int16 variables would be     */
-            /* loaded in reverse order and the code will give the wrong result. In that case swapping   */
-            /* the SMLAWB and SMLAWT instructions should solve the problem.                             */
-            Atmp = A_align_Q12[ j ];
-            SB = S[ Order - 1 - idx ];
-            S[ Order - 1 - idx ] = SA;
-            out32_Q10 = SKP_SMLAWB( out32_Q10, SA, Atmp );
-            out32_Q10 = SKP_SMLAWT( out32_Q10, SB, Atmp );
-            SA = S[ Order - 2 - idx ];
-            S[ Order - 2 - idx ] = SB;
-#else
             SB = S[ Order - 1 - idx ];
             S[ Order - 1 - idx ] = SA;
             out32_Q10 = SKP_SMLAWB( out32_Q10, SA, A_Q12[ ( j << 1 ) ] );
             out32_Q10 = SKP_SMLAWB( out32_Q10, SB, A_Q12[ ( j << 1 ) + 1 ] );
             SA = S[ Order - 2 - idx ];
             S[ Order - 2 - idx ] = SB;
-#endif
         }
 
-#if !defined(_SYSTEM_IS_BIG_ENDIAN)
-        /* unrolled loop: epilog */
-        Atmp = A_align_Q12[ Order_half - 1 ];
-        SB = S[ 0 ];
-        S[ 0 ] = SA;
-        out32_Q10 = SKP_SMLAWB( out32_Q10, SA, Atmp );
-        out32_Q10 = SKP_SMLAWT( out32_Q10, SB, Atmp );
-#else
         /* unrolled loop: epilog */
         SB = S[ 0 ];
         S[ 0 ] = SA;
         out32_Q10 = SKP_SMLAWB( out32_Q10, SA, A_Q12[ Order - 2 ] );
         out32_Q10 = SKP_SMLAWB( out32_Q10, SB, A_Q12[ Order - 1 ] );
-#endif
         /* apply gain to excitation signal and add to prediction */
         out32_Q10 = SKP_ADD_SAT32( out32_Q10, SKP_SMULWB( Gain_Q26, in[ k ] ) );
 

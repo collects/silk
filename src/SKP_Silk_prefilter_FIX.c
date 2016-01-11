@@ -97,11 +97,7 @@ void SKP_Silk_prefilter_FIX(
     SKP_int32 HarmShapeFIRPacked_Q12, LF_shp_Q14;
     SKP_int32 x_filt_Q12[ MAX_FRAME_LENGTH / NB_SUBFR ];
     SKP_int16 st_res[ ( MAX_FRAME_LENGTH / NB_SUBFR ) + MAX_SHAPE_LPC_ORDER ];
-#if !defined(_SYSTEM_IS_BIG_ENDIAN)
-    SKP_int32 B_Q12;
-#else
     SKP_int16 B_Q12[ 2 ];
-#endif
 
     /* Setup pointers */
     px  = x;
@@ -127,23 +123,6 @@ void SKP_Silk_prefilter_FIX(
             psEnc->sCmn.warping_Q16, psEnc->sCmn.subfr_length, psEnc->sCmn.shapingLPCOrder );
 
         /* reduce (mainly) low frequencies during harmonic emphasis */
-#if !defined(_SYSTEM_IS_BIG_ENDIAN)
-        /* NOTE: the code below loads two int16 values in an int32, and multiplies each using the   */
-        /* SMLABB and SMLABT instructions. On a big-endian CPU the two int16 variables would be     */
-        /* loaded in reverse order and the code will give the wrong result. In that case swapping   */
-        /* the SMLABB and SMLABT instructions should solve the problem.                             */
-        B_Q12 = SKP_RSHIFT_ROUND( psEncCtrl->GainsPre_Q14[ k ], 2 );
-        tmp_32 = SKP_SMLABB( SKP_FIX_CONST( INPUT_TILT, 26 ), psEncCtrl->HarmBoost_Q14[ k ], HarmShapeGain_Q12 );   /* Q26 */
-        tmp_32 = SKP_SMLABB( tmp_32, psEncCtrl->coding_quality_Q14, SKP_FIX_CONST( HIGH_RATE_INPUT_TILT, 12 ) );    /* Q26 */
-        tmp_32 = SKP_SMULWB( tmp_32, -psEncCtrl->GainsPre_Q14[ k ] );                                               /* Q24 */
-        tmp_32 = SKP_RSHIFT_ROUND( tmp_32, 12 );                                                                    /* Q12 */
-        B_Q12 |= SKP_LSHIFT( SKP_SAT16( tmp_32 ), 16 );
-
-        x_filt_Q12[ 0 ] = SKP_SMLABT( SKP_SMULBB( st_res[ 0 ], B_Q12 ), P->sHarmHP, B_Q12 );
-        for( j = 1; j < psEnc->sCmn.subfr_length; j++ ) {
-            x_filt_Q12[ j ] = SKP_SMLABT( SKP_SMULBB( st_res[ j ], B_Q12 ), st_res[ j - 1 ], B_Q12 );
-        }
-#else
         B_Q12[ 0 ] = SKP_RSHIFT_ROUND( psEncCtrl->GainsPre_Q14[ k ], 2 );
         tmp_32 = SKP_SMLABB( SKP_FIX_CONST( INPUT_TILT, 26 ), psEncCtrl->HarmBoost_Q14[ k ], HarmShapeGain_Q12 );   /* Q26 */
         tmp_32 = SKP_SMLABB( tmp_32, psEncCtrl->coding_quality_Q14, SKP_FIX_CONST( HIGH_RATE_INPUT_TILT, 12 ) );    /* Q26 */
@@ -155,7 +134,6 @@ void SKP_Silk_prefilter_FIX(
         for( j = 1; j < psEnc->sCmn.subfr_length; j++ ) {
             x_filt_Q12[ j ] = SKP_SMLABB( SKP_SMULBB( st_res[ j ], B_Q12[ 0 ] ), st_res[ j - 1 ], B_Q12[ 1 ] );
         }
-#endif
         P->sHarmHP = st_res[ psEnc->sCmn.subfr_length - 1 ];
 
         SKP_Silk_prefilt_FIX( P, x_filt_Q12, pxw, HarmShapeFIRPacked_Q12, Tilt_Q14, 

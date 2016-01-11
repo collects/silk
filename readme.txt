@@ -1,5 +1,5 @@
 ************************************************************************
-Fixed Point SILK SDK 1.0.9 MIPS source code package
+Fixed Point SILK SDK 1.0.9 source code package
 Copyright 2012 (c), Skype Limited
 https://developer.skype.com/silk/
 ************************************************************************
@@ -38,38 +38,28 @@ III. How to use the Makefile
  
     2. How to compile an encoder executable:
 
-       make encoder 
+       make encoder
 
     3. How to compile a decoder executable:
 
-       make decoder 
+       make decoder
 
     4. How to compile the comparison tool:
 
-       make signalcompare 
+       make signalcompare
 
     5. How to clean and compile all of the above:
 
-       make clean all 
+       make clean all
 
-    6. How to clean and compile for MIPS based device using a cross compiler:
+    6. How to build for big endian CPU's
 
-       make clean all TOOLCHAIN_PREFIX=(1)
+       Make clean all ADDED_DEFINES+=_SYSTEM_IS_BIG_ENDIAN
+       To be able to use the test vectors with big endian CPU's the test programs
+       need to be compiled in a different way. Note that the 16 bit input and output 
+       from the test programs will have the upper and lower bytes swapped with this setting. 
 
-       (1) Compiler toolchain prefix, most cross-compilers do need to specify that.
-
-    7. How to build for MIPS big endian or little endian CPU's
-
-       - for big endian:     make clean all MIPS=yes
-       - for little endian:  make clean all MIPSEL=yes
-       
-       Note that the 16 bit input and output from the test programs will have the upper and lower bytes swapped between little and big endian. 
-
-    8. How to build native C code on MIPS target (no assembly code)
-
-       make clean all MIPS[EL]=yes ADDED_DEFINES+=NO_ASM 
-
-    9. How to use the comparison tool:
+    7. How to use the comparison tool:
 
        See 'How to use the test vectors.txt' in the test_vectors folder.     	
 
@@ -83,7 +73,7 @@ IV. History
     Version 1.0.4 - Updated with various bugfixes and improvements, including some API changes
                     Added support for big endian platforms
                     Added resampler support for additional API sample rates
-    Version 1.0.3 - Updated with various bugfixes and improvements 
+    Version 1.0.3 - Updated with various bugfixes and improvements
     Version 1.0.2 - Updated with various bugfixes and improvements
     Version 1.0.1 - First beta source code release
     
@@ -96,9 +86,6 @@ V. Compatibility
     Mac OS X Version 10.7.4, 64-bit version, Intel Core i7 CPU
     Ubuntu Linux 10.04 LTS,  32-bit version, Intel Core i7 CPU
     Ubuntu Linux 12.04 LTS,  64-bit version, Intel Core 2 Duo CPU
-	
-    MIPS:
-    Qemu mips/mipsel emulation platform
 
 VI. Known Issues
 

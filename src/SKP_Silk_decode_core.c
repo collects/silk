@@ -212,75 +212,6 @@ SKP_int		subfr_length
 {
   SKP_int	i;
   SKP_int32	LPC_pred_Q10;
-  #if !defined(_SYSTEM_IS_BIG_ENDIAN)
-  SKP_int32	Atmp;
-        /* Short term prediction */
-        /* NOTE: the code below loads two int16 values in an int32, and multiplies each using the   */
-        /* SMLAWB and SMLAWT instructions. On a big-endian CPU the two int16 variables would be     */
-        /* loaded in reverse order and the code will give the wrong result. In that case swapping   */
-        /* the SMLAWB and SMLAWT instructions should solve the problem.                             */
-        if( LPC_order == 16 ) {
-            for( i = 0; i < subfr_length; i++ ) {
-                /* unrolled */
-                Atmp = *( ( SKP_int32* )&A_Q12_tmp[ 0 ] );    /* read two coefficients at once */
-                LPC_pred_Q10 = SKP_SMULWB(               sLPC_Q14[ MAX_LPC_ORDER + i -  1 ], Atmp );
-                LPC_pred_Q10 = SKP_SMLAWT( LPC_pred_Q10, sLPC_Q14[ MAX_LPC_ORDER + i -  2 ], Atmp );
-                Atmp = *( ( SKP_int32* )&A_Q12_tmp[ 2 ] );
-                LPC_pred_Q10 = SKP_SMLAWB( LPC_pred_Q10, sLPC_Q14[ MAX_LPC_ORDER + i -  3 ], Atmp );
-                LPC_pred_Q10 = SKP_SMLAWT( LPC_pred_Q10, sLPC_Q14[ MAX_LPC_ORDER + i -  4 ], Atmp );
-                Atmp = *( ( SKP_int32* )&A_Q12_tmp[ 4 ] );
-                LPC_pred_Q10 = SKP_SMLAWB( LPC_pred_Q10, sLPC_Q14[ MAX_LPC_ORDER + i -  5 ], Atmp );
-                LPC_pred_Q10 = SKP_SMLAWT( LPC_pred_Q10, sLPC_Q14[ MAX_LPC_ORDER + i -  6 ], Atmp );
-                Atmp = *( ( SKP_int32* )&A_Q12_tmp[ 6 ] );
-                LPC_pred_Q10 = SKP_SMLAWB( LPC_pred_Q10, sLPC_Q14[ MAX_LPC_ORDER + i -  7 ], Atmp );
-                LPC_pred_Q10 = SKP_SMLAWT( LPC_pred_Q10, sLPC_Q14[ MAX_LPC_ORDER + i -  8 ], Atmp );
-                Atmp = *( ( SKP_int32* )&A_Q12_tmp[ 8 ] );
-                LPC_pred_Q10 = SKP_SMLAWB( LPC_pred_Q10, sLPC_Q14[ MAX_LPC_ORDER + i -  9 ], Atmp );
-                LPC_pred_Q10 = SKP_SMLAWT( LPC_pred_Q10, sLPC_Q14[ MAX_LPC_ORDER + i - 10 ], Atmp );
-                Atmp = *( ( SKP_int32* )&A_Q12_tmp[ 10 ] );
-                LPC_pred_Q10 = SKP_SMLAWB( LPC_pred_Q10, sLPC_Q14[ MAX_LPC_ORDER + i - 11 ], Atmp );
-                LPC_pred_Q10 = SKP_SMLAWT( LPC_pred_Q10, sLPC_Q14[ MAX_LPC_ORDER + i - 12 ], Atmp );
-                Atmp = *( ( SKP_int32* )&A_Q12_tmp[ 12 ] );
-                LPC_pred_Q10 = SKP_SMLAWB( LPC_pred_Q10, sLPC_Q14[ MAX_LPC_ORDER + i - 13 ], Atmp );
-                LPC_pred_Q10 = SKP_SMLAWT( LPC_pred_Q10, sLPC_Q14[ MAX_LPC_ORDER + i - 14 ], Atmp );
-                Atmp = *( ( SKP_int32* )&A_Q12_tmp[ 14 ] );
-                LPC_pred_Q10 = SKP_SMLAWB( LPC_pred_Q10, sLPC_Q14[ MAX_LPC_ORDER + i - 15 ], Atmp );
-                LPC_pred_Q10 = SKP_SMLAWT( LPC_pred_Q10, sLPC_Q14[ MAX_LPC_ORDER + i - 16 ], Atmp );
-                
-                /* Add prediction to LPC residual */
-                vec_Q10[ i ] = SKP_ADD32( pres_Q10[ i ], LPC_pred_Q10 );
-                
-                /* Update states */
-                sLPC_Q14[ MAX_LPC_ORDER + i ] = SKP_LSHIFT_ovflw( vec_Q10[ i ], 4 );
-            }
-        } else {
-            SKP_assert( LPC_order == 10 );
-            for( i = 0; i < subfr_length; i++ ) {
-                /* unrolled */
-                Atmp = *( ( SKP_int32* )&A_Q12_tmp[ 0 ] );    /* read two coefficients at once */
-                LPC_pred_Q10 = SKP_SMULWB(               sLPC_Q14[ MAX_LPC_ORDER + i -  1 ], Atmp );
-                LPC_pred_Q10 = SKP_SMLAWT( LPC_pred_Q10, sLPC_Q14[ MAX_LPC_ORDER + i -  2 ], Atmp );
-                Atmp = *( ( SKP_int32* )&A_Q12_tmp[ 2 ] );
-                LPC_pred_Q10 = SKP_SMLAWB( LPC_pred_Q10, sLPC_Q14[ MAX_LPC_ORDER + i -  3 ], Atmp );
-                LPC_pred_Q10 = SKP_SMLAWT( LPC_pred_Q10, sLPC_Q14[ MAX_LPC_ORDER + i -  4 ], Atmp );
-                Atmp = *( ( SKP_int32* )&A_Q12_tmp[ 4 ] );
-                LPC_pred_Q10 = SKP_SMLAWB( LPC_pred_Q10, sLPC_Q14[ MAX_LPC_ORDER + i -  5 ], Atmp );
-                LPC_pred_Q10 = SKP_SMLAWT( LPC_pred_Q10, sLPC_Q14[ MAX_LPC_ORDER + i -  6 ], Atmp );
-                Atmp = *( ( SKP_int32* )&A_Q12_tmp[ 6 ] );
-                LPC_pred_Q10 = SKP_SMLAWB( LPC_pred_Q10, sLPC_Q14[ MAX_LPC_ORDER + i -  7 ], Atmp );
-                LPC_pred_Q10 = SKP_SMLAWT( LPC_pred_Q10, sLPC_Q14[ MAX_LPC_ORDER + i -  8 ], Atmp );
-                Atmp = *( ( SKP_int32* )&A_Q12_tmp[ 8 ] );
-                LPC_pred_Q10 = SKP_SMLAWB( LPC_pred_Q10, sLPC_Q14[ MAX_LPC_ORDER + i -  9 ], Atmp );
-                LPC_pred_Q10 = SKP_SMLAWT( LPC_pred_Q10, sLPC_Q14[ MAX_LPC_ORDER + i - 10 ], Atmp );
-                
-                /* Add prediction to LPC residual */
-                vec_Q10[ i ] = SKP_ADD32( pres_Q10[ i ], LPC_pred_Q10 );
-                
-                /* Update states */
-                sLPC_Q14[ MAX_LPC_ORDER + i ] = SKP_LSHIFT_ovflw( vec_Q10[ i ], 4 );
-            }
-        }
-#else
     SKP_int j;
         for( i = 0; i < subfr_length; i++ ) {
             /* Partially unrolled */
@@ -305,7 +236,6 @@ SKP_int		subfr_length
             /* Update states */
             sLPC_Q14[ MAX_LPC_ORDER + i ] = SKP_LSHIFT_ovflw( vec_Q10[ i ], 4 );
         }
-#endif
 }
 
 

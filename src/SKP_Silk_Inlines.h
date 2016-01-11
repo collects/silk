@@ -26,7 +26,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ***********************************************************************/
 
 /*! \file SKP_Silk_Inlines.h
- *  \brief SKP_Silk_Inlines.h defines inline signal processing functions.
+ *  \brief SigProcFix_Inlines.h defines inline signal processing functions.
  */
 
 #ifndef _SKP_SILK_FIX_INLINES_H_
@@ -39,7 +39,6 @@ extern "C"
 {
 #endif
 
-#if ! defined(EMBEDDED_MIPS)
 /* count leading zeros of SKP_int64 */
 SKP_INLINE SKP_int32 SKP_Silk_CLZ64(SKP_int64 in)
 {
@@ -54,7 +53,6 @@ SKP_INLINE SKP_int32 SKP_Silk_CLZ64(SKP_int64 in)
         return SKP_Silk_CLZ32( in_upper );
     }
 }
-#endif
 
 /* get number of leading zeros and fractional part (the bits right after the leading one */
 SKP_INLINE void SKP_Silk_CLZ_FRAC(SKP_int32 in,            /* I: input */

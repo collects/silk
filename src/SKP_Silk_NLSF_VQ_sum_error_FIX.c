@@ -27,7 +27,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "SKP_Silk_main_FIX.h"
 
-#if (!defined(__mips__)) && (EMBEDDED_ARM < 6)
 
 /* Compute weighted quantization errors for an LPC_order element input vector, over one codebook stage */
 void SKP_Silk_NLSF_VQ_sum_error_FIX(
@@ -79,5 +78,4 @@ void SKP_Silk_NLSF_VQ_sum_error_FIX(
     }
 }
 
-#endif
 
