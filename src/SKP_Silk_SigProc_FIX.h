@@ -466,7 +466,15 @@ SKP_INLINE SKP_int32 SKP_ROR32( SKP_int32 a32, SKP_int rot )
 #endif
 
 /* Allocate SKP_int16 alligned to 4-byte memory address */
+#if EMBEDDED_ARM
+#if defined(_WIN32) && defined(_M_ARM)
+#define SKP_DWORD_ALIGN __declspec(align(4))
+#else
+#define SKP_DWORD_ALIGN __attribute__((aligned(4)))
+#endif
+#else
 #define SKP_DWORD_ALIGN
+#endif
 
 /* Useful Macros that can be adjusted to other platforms */
 #define SKP_memcpy(a, b, c)                memcpy((a), (b), (c))    /* Dest, Src, ByteCount */

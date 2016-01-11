@@ -1,5 +1,5 @@
 ************************************************************************
-Fixed Point SILK SDK 1.0.9 source code package
+Floating Point SILK SDK 1.0.9 source code package
 Copyright 2012 (c), Skype Limited
 https://developer.skype.com/silk/
 ************************************************************************
@@ -8,10 +8,10 @@ Date: 03/08/2012 (Format: DD/MM/YYYY)
 
 I. Description
 
-This package contains files for compilation and evaluation of the fixed
+This package contains files for compilation and evaluation of the floating
 point SILK SDK library. The following is included in this package:
 
-    o Source code for the fixed point SILK SDK library
+    o Source code for the floating point SILK SDK library
     o Source code for creating encoder and decoder executables
     o Test vectors
     o Comparison tool
@@ -44,22 +44,18 @@ III. How to use the Makefile
 
        make decoder
 
-    4. How to compile the comparison tool:
-
-       make signalcompare
-
-    5. How to clean and compile all of the above:
+    4. How to clean and compile all of the above:
 
        make clean all
-
-    6. How to build for big endian CPU's
+    
+    5. How to build for big endian CPU's
 
        Make clean all ADDED_DEFINES+=_SYSTEM_IS_BIG_ENDIAN
        To be able to use the test vectors with big endian CPU's the test programs
        need to be compiled in a different way. Note that the 16 bit input and output 
        from the test programs will have the upper and lower bytes swapped with this setting. 
 
-    7. How to use the comparison tool:
+    6. How to use the comparison tool:
 
        See 'How to use the test vectors.txt' in the test_vectors folder.     	
 

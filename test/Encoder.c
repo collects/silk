@@ -200,7 +200,11 @@ int main( int argc, char* argv[] )
 
     /* Print options */
     if( !quiet ) {
-        printf("********** Silk Encoder (Fixed Point) v %s ********************\n", SKP_Silk_SDK_get_version());
+        if( sizeof(SKP_float) == sizeof(float) ) {
+            printf("********** Silk Encoder (Single Precision) v %s ***************\n", SKP_Silk_SDK_get_version());
+        } else {
+            printf("********** Silk Encoder (Double Precision) v %s ***************\n", SKP_Silk_SDK_get_version());
+        }
         printf("********** Compiled for %d bit cpu ******************************* \n", (int)sizeof(void*) * 8 );
         printf( "Input:                          %s\n",     speechInFileName );
         printf( "Output:                         %s\n",     bitOutFileName );

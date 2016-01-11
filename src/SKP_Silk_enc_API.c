@@ -27,7 +27,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
 #include "SKP_Silk_define.h"
-#include "SKP_Silk_main_FIX.h"
+#include "SKP_Silk_main_FLP.h"
 #include "SKP_Silk_SDK_API.h"
 #include "SKP_Silk_control.h"
 #include "SKP_Silk_typedef.h"
@@ -42,7 +42,7 @@ SKP_int SKP_Silk_SDK_Get_Encoder_Size( SKP_int32 *encSizeBytes )
 {
     SKP_int ret = 0;
     
-    *encSizeBytes = sizeof( SKP_Silk_encoder_state_FIX );
+    *encSizeBytes = sizeof( SKP_Silk_encoder_state_FLP );
     
     return ret;
 }
@@ -56,10 +56,10 @@ SKP_int SKP_Silk_SDK_QueryEncoder(
     SKP_Silk_EncodeControlStruct *encStatus     /* O:   Control Structure                               */
 )
 {
-    SKP_Silk_encoder_state_FIX *psEnc;
+    SKP_Silk_encoder_state_FLP *psEnc;
     SKP_int ret = 0;
 
-    psEnc = ( SKP_Silk_encoder_state_FIX* )encState;
+    psEnc = ( SKP_Silk_encoder_state_FLP* )encState;
 
     encStatus->API_sampleRate        = psEnc->sCmn.API_fs_Hz;
     encStatus->maxInternalSampleRate = SKP_SMULBB( psEnc->sCmn.maxInternal_fs_kHz, 1000 );
@@ -80,14 +80,14 @@ SKP_int SKP_Silk_SDK_InitEncoder(
     SKP_Silk_EncodeControlStruct    *encStatus          /* O:   Control structure                               */
 )
 {
-    SKP_Silk_encoder_state_FIX *psEnc;
+    SKP_Silk_encoder_state_FLP *psEnc;
     SKP_int ret = 0;
 
         
-    psEnc = ( SKP_Silk_encoder_state_FIX* )encState;
+    psEnc = ( SKP_Silk_encoder_state_FLP* )encState;
 
     /* Reset Encoder */
-    if( ret += SKP_Silk_init_encoder_FIX( psEnc ) ) {
+    if( ret += SKP_Silk_init_encoder_FLP( psEnc ) ) {
         SKP_assert( 0 );
     }
 
@@ -116,7 +116,7 @@ SKP_int SKP_Silk_SDK_Encode(
     SKP_int   nSamplesToBuffer, Complexity, input_10ms, nSamplesFromInput = 0;
     SKP_int32 TargetRate_bps, API_fs_Hz;
     SKP_int16 MaxBytesOut;
-    SKP_Silk_encoder_state_FIX *psEnc = ( SKP_Silk_encoder_state_FIX* )encState;
+    SKP_Silk_encoder_state_FLP *psEnc = ( SKP_Silk_encoder_state_FLP* )encState;
 
     SKP_assert( encControl != NULL );
 
@@ -161,7 +161,7 @@ SKP_int SKP_Silk_SDK_Encode(
     }
 
     TargetRate_bps = SKP_LIMIT( TargetRate_bps, MIN_TARGET_RATE_BPS, MAX_TARGET_RATE_BPS );
-    if( ( ret = SKP_Silk_control_encoder_FIX( psEnc, PacketSize_ms, TargetRate_bps, 
+    if( ( ret = SKP_Silk_control_encoder_FLP( psEnc, PacketSize_ms, TargetRate_bps, 
                         PacketLoss_perc, UseDTX, Complexity) ) != 0 ) {
         SKP_assert( 0 );
         return( ret );
@@ -211,12 +211,12 @@ SKP_int SKP_Silk_SDK_Encode(
             if( MaxBytesOut == 0 ) {
                 /* No payload obtained so far */
                 MaxBytesOut = *nBytesOut;
-                if( ( ret = SKP_Silk_encode_frame_FIX( psEnc, outData, &MaxBytesOut, psEnc->sCmn.inputBuf ) ) != 0 ) {
+                if( ( ret = SKP_Silk_encode_frame_FLP( psEnc, outData, &MaxBytesOut, psEnc->sCmn.inputBuf ) ) != 0 ) {
                     SKP_assert( 0 );
                 }
             } else {
                 /* outData already contains a payload */
-                if( ( ret = SKP_Silk_encode_frame_FIX( psEnc, outData, nBytesOut, psEnc->sCmn.inputBuf ) ) != 0 ) {
+                if( ( ret = SKP_Silk_encode_frame_FLP( psEnc, outData, nBytesOut, psEnc->sCmn.inputBuf ) ) != 0 ) {
                     SKP_assert( 0 );
                 }
                 /* Check that no second payload was created */

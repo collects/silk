@@ -190,7 +190,7 @@
     <ClInclude Include="..\interface\SKP_Silk_typedef.h" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\src\Silk_FIX.vcxproj">
+    <ProjectReference Include="..\src\Silk_FLP.vcxproj">
       <Project>{56b91d01-9150-4bbf-afa1-5b68ab991b76}</Project>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
     </ProjectReference>
