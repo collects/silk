@@ -1,5 +1,5 @@
 ************************************************************************
-Fixed Point SILK SDK 1.0.9 ARM source code package
+Fixed Point SILK SDK 1.0.9 MIPS source code package
 Copyright 2012 (c), Skype Limited
 https://developer.skype.com/silk/
 ************************************************************************
@@ -38,38 +38,36 @@ III. How to use the Makefile
  
     2. How to compile an encoder executable:
 
-       make encoder
+       make encoder 
 
     3. How to compile a decoder executable:
 
-       make decoder
+       make decoder 
 
     4. How to compile the comparison tool:
 
-       make signalcompare
+       make signalcompare 
 
     5. How to clean and compile all of the above:
 
-       make clean all
+       make clean all 
 
-    6. How to clean and compile for ARM based device using a cross compiler:
+    6. How to clean and compile for MIPS based device using a cross compiler:
 
-       make clean all TOOLCHAIN_PREFIX=(1) TARGET_CPU=(2) TARGET_ARCH=(3)
+       make clean all TOOLCHAIN_PREFIX=(1)
 
        (1) Compiler toolchain prefix, most cross-compilers do need to specify that.
-       (2) Target CPU, e.g. arm1136jf-s or cortex-a8, depends on the compiler. (makefile passes -mcpu= to the compiler)
-       (3) Target architecture, e.g. armv6 or armv7, depends on the compiler. (makefile passes -march= to the compiler)
 
-    7. How to build for big endian CPU's
+    7. How to build for MIPS big endian or little endian CPU's
 
-       make clean all ADDED_DEFINES+=_SYSTEM_IS_BIG_ENDIAN
-       To be able to use the test vectors with big endian CPU's the test programs
-       need to be compiled in a different way. Note that the 16 bit input and output 
-       from the test programs will have the upper and lower bytes swapped with this setting. 
+       - for big endian:     make clean all MIPS=yes
+       - for little endian:  make clean all MIPSEL=yes
+       
+       Note that the 16 bit input and output from the test programs will have the upper and lower bytes swapped between little and big endian. 
 
-    8. How to build native C code (no assembly code)
+    8. How to build native C code on MIPS target (no assembly code)
 
-       make clean all ADDED_DEFINES+=NO_ASM
+       make clean all MIPS[EL]=yes ADDED_DEFINES+=NO_ASM 
 
     9. How to use the comparison tool:
 
@@ -99,9 +97,8 @@ V. Compatibility
     Ubuntu Linux 10.04 LTS,  32-bit version, Intel Core i7 CPU
     Ubuntu Linux 12.04 LTS,  64-bit version, Intel Core 2 Duo CPU
 	
-    ARM:
-    Android 2.3, compiled with NDK r7.
-    iOS 5.0
+    MIPS:
+    Qemu mips/mipsel emulation platform
 
 VI. Known Issues
 

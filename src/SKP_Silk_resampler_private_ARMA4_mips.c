@@ -25,24 +25,105 @@ ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ***********************************************************************/
 
-/*																		*
- * SKP_Silk_resampler_private_ARMA4.c                                 *
- *																		*
- * Fourth order ARMA filter, applies 64x gain                           *
- *                                                                      *
- * Copyright 2010 (c), Skype Limited                                    *
- *                                                                      */
+/*												*
+ * SKP_Silk_resampler_private_ARMA4.c			*
+ *												*
+ *												*
+ * Copyright 2010 (c), Skype Limited			*
+ *												*/
 
 #include "SKP_Silk_SigProc_FIX.h"
 #include "SKP_Silk_resampler_private.h"
 
+#if defined(EMBEDDED_MIPS)
+
+#define RESAMPLER_PRIVATE_ARMA4(S, out, in, coef, len)	\
+__asm__ volatile (	\
+  ".set push			\n\t"	\
+  ".set noreorder		\n\t"	\
+  "lw	$14, 0(%0)		\n\t"	\
+  "lw	$15, 4(%0)		\n\t"	\
+  "lw	$16, 8(%0)		\n\t"	\
+  "blez	%4, 1f			\n\t"	\
+  "lw	$17, 12(%0)		\n\t"	\
+\
+  "0:					\n\t"	\
+  "lh	$8, 0(%2)		\n\t"	\
+  "lh	$9, 0(%3)		\n\t"	\
+  "lh	$10, 4(%3)		\n\t"	\
+  "li	$13, 0			\n\t"	\
+  "sll	$8, $8, 8		\n\t"	\
+  "sll	$14, $14, 2		\n\t"	\
+  "sll	$16, $16, 2		\n\t"	\
+  "sll	$9, $9, 16		\n\t"	\
+  "sll	$10, $10, 16	\n\t"	\
+  "mthi	$15				\n\t"	\
+  "mtlo	$13				\n\t"	\
+  "addu	$11, $8, $14	\n\t"	\
+  "madd	$8, $9			\n\t"	\
+  "mtlo	$13				\n\t"	\
+  "addu	$12, $11, $16	\n\t"	\
+  "madd	$11, $10		\n\t"	\
+\
+  "lh	$9, 2(%3)		\n\t"	\
+  "lh	$10, 8(%3)		\n\t"	\
+  "sll	$9, $9, 16		\n\t"	\
+  "mfhi	$14				\n\t"	\
+  "mtlo	$13				\n\t"	\
+  "mthi $17				\n\t"	\
+  "madd	$11, $9			\n\t"	\
+  "sll	$10, $10, 16	\n\t"	\
+  "mtlo	$13				\n\t"	\
+  "lh	$9, 6(%3)		\n\t"	\
+  "madd	$12, $10		\n\t"	\
+  "mfhi	$16				\n\t"	\
+\
+  "lh	$10, 10(%3)		\n\t"	\
+  "sra	$8, $8, 2		\n\t"	\
+  "sll	$9, $9, 16		\n\t"	\
+  "mtlo $13				\n\t"	\
+  "mthi	$8				\n\t"	\
+  "sll	$10, $10, 16	\n\t"	\
+  "madd	$11, $9			\n\t"	\
+  "sra	$11, $11, 2		\n\t"	\
+  "mtlo $13				\n\t"	\
+  "mfhi	$15				\n\t"	\
+  "lh	$9, 12(%3)		\n\t"	\
+  "mthi $11				\n\t"	\
+  "madd	$12, $10		\n\t"	\
+\
+  "sll	$9, $9, 16		\n\t"	\
+  "mfhi	$17				\n\t"	\
+  "mult	$12, $9			\n\t"	\
+  "mfhi	$10				\n\t"	\
+  "li	$11, 0x7FFF		\n\t"   \
+  "li	$12, 0x8000		\n\t"   \
+  "addiu	$10, $10, 128	\n\t"	\
+  "addi	%2, %2, 2		\n\t"   \
+  "sra	$10, $10, 8		\n\t"	\
+  "addi	%4, %4, -1		\n\t"   \
+  "slti	$8, $10, 0x7FFF	\n\t"	\
+  "slti	$9, $10, 0x8000	\n\t"	\
+  "movz	$10, $11, $8	\n\t"   \
+  "movn	$10, $12, $9	\n\t"   \
+  "sh	$10, 0(%1)		\n\t"   \
+  "bgtz	%4, 0b			\n\t"   \
+  "addi	%1, %1, 2		\n\t"   \
+\
+  "1:					\n\t"   \
+  "sw	$14, 0(%0)		\n\t"	\
+  "sw	$15, 4(%0)		\n\t"	\
+  "sw	$16, 8(%0)		\n\t"	\
+  "sw	$17, 12(%0)		\n\t"	\
+  ".set pop				\n\t"	\
+  : "+r" (S), "+r" (out), "+r" (in), "+r" (coef), "+r" (len) \
+  : : "$8", "$9", "$10", "$11", "$12", "$13", "$14", "$15", "$16", "$17")
 /* Fourth order ARMA filter                                             */
 /* Internally operates as two biquad filters in sequence.               */
 
 /* Coeffients are stored in a packed format:                                                        */
 /*    { B1_Q14[1], B2_Q14[1], -A1_Q14[1], -A1_Q14[2], -A2_Q14[1], -A2_Q14[2], gain_Q16 }            */
 /* where it is assumed that B*_Q14[0], B*_Q14[2], A*_Q14[0] are all 16384                           */
-#if (!defined(EMBEDDED_MIPS))
 void SKP_Silk_resampler_private_ARMA4(
 	SKP_int32					    S[],		    /* I/O: State vector [ 4 ]			    	    */
 	SKP_int16					    out[],		    /* O:	Output signal				    	    */
@@ -51,29 +132,28 @@ void SKP_Silk_resampler_private_ARMA4(
 	SKP_int32				        len				/* I:	Signal length				        	*/
 )
 {
-	SKP_int32 k;
-	SKP_int32 in_Q8, out1_Q8, out2_Q8, X;
-
-	for( k = 0; k < len; k++ ) {
-        in_Q8  = SKP_LSHIFT32( (SKP_int32)in[ k ], 8 );
-
-        /* Outputs of first and second biquad */
-        out1_Q8 = SKP_ADD_LSHIFT32( in_Q8,   S[ 0 ], 2 );
-        out2_Q8 = SKP_ADD_LSHIFT32( out1_Q8, S[ 2 ], 2 );
-
-        /* Update states, which are stored in Q6. Coefficients are in Q14 here */
-        X      = SKP_SMLAWB( S[ 1 ], in_Q8,   Coef[ 0 ] );
-        S[ 0 ] = SKP_SMLAWB( X,      out1_Q8, Coef[ 2 ] );
-
-        X      = SKP_SMLAWB( S[ 3 ], out1_Q8, Coef[ 1 ] );
-        S[ 2 ] = SKP_SMLAWB( X,      out2_Q8, Coef[ 4 ] );
-
-        S[ 1 ] = SKP_SMLAWB( SKP_RSHIFT32( in_Q8,   2 ), out1_Q8, Coef[ 3 ] );
-        S[ 3 ] = SKP_SMLAWB( SKP_RSHIFT32( out1_Q8, 2 ), out2_Q8, Coef[ 5 ] );
-
-        /* Apply gain and store to output. The coefficient is in Q16 */
-        out[ k ] = (SKP_int16)SKP_SAT16( SKP_RSHIFT32( SKP_SMLAWB( 128, out2_Q8, Coef[ 6 ] ), 8 ) );
-	}
+	RESAMPLER_PRIVATE_ARMA4(S, out, in, Coef, len);
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 #endif
 

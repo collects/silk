@@ -25,53 +25,52 @@ ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ***********************************************************************/
 
-#if defined(__arm__)
+/*                                                                      *
+ * SKP_Silk_int16_array_maxabs.c                                      *
+ *                                                                      *
+ * Function that returns the maximum absolut value of                   *
+ * the input vector                                                     *
+ *                                                                      *
+ * Copyright 2010 (c), Skype Limited                                    *
+ *                                                                      */
 
-#include "SKP_Silk_AsmPreproc.h"
-#if EMBEDDED_ARM>=4
+#include "SKP_Silk_SigProc_FIX.h"
 
-	VARDEF ptr_slope, r6
-	VARDEF ptr_LUT, _r7
-	VARDEF in_Q5, r1
-	VARDEF ind, r2
-	VARDEF val_slope, r5
-	VARDEF val_PUT, r4
-	VARDEF in_Q5_tmp, r3
+#if defined(EMBEDDED_MIPS)
 
-.globl	SYM(SKP_Silk_sigm_Q15)
-SYM(SKP_Silk_sigm_Q15):
-	stmdb	sp!,  {r4-r7, fp, ip, lr}
-	add		fp, sp, #24
-	cmp		r0, #0
-	ldr		ptr_slope, TABLE(L0, =SKP_Silk_sigm_tab)
 
-	mov		in_Q5, r0
-	rsblt	in_Q5, r0, #0
-	mov		r0, #32768
-	addlt	ptr_slope, ptr_slope, #24
-	movlt	r0, #1
-	add		ptr_LUT, ptr_slope, #12											/*sigm_LUT_pos_Q15*/
-	cmp		in_Q5, #192											/*6*32*/
-	sub		r0, r0, #1
-	
-	bge		LR(1, f)
-	mov		ind, in_Q5, asr #5										/*ind*/	
-	mov		ind, ind, lsl #1
-	and		in_Q5_tmp,	in_Q5, #0x1F
-	ldrsh	val_slope, [ptr_slope, ind]										/*sigm_LUT_slope_Q10*/
-	ldrsh	val_PUT, [ptr_LUT, ind]										/*sigm_LUT_pos/neg_Q15*/
-	mla		r0, val_slope, in_Q5_tmp, val_PUT
-L(1)	
-	ldmia	sp!,  {r4-r7, fp, ip, pc}
-	
-L(L0)		
-	DCD	SYM(SKP_Silk_sigm_tab)
+/*
+  This implementation is compiled into 30% faster MIPS code than the
+  generic C implementation, because 'slti/movn' beats 'mul', i.e., it's
+  MIPS ASM written in C. Note however that it compiles into a slower x86 code
+  than the generic C one, so don't backport it.
+*/
+SKP_int16 SKP_Silk_int16_array_maxabs(const SKP_int16 * vec,
+					const SKP_int32 len)
+{
+	SKP_int32 mx = 0, i, v, u;
 
-	SKP_TABLE SKP_Silk_sigm_tab, 2
-	DCW		237, 153, 73, 30, 12, 7,						\
-			16384, 23955, 28861, 31213, 32178, 32548,		\
-			-237, -153, -73, -30, -12, -7,					\
-			16384, 8812, 3906, 1554, 589, 219
-	END	
-#endif
+	/* Unrolled for 2 elements */
+	for(i = len - 1; i > 0; i -= 2) {
+		v = vec[i];
+		u = vec[i - 1];
+		if(v > mx)
+			mx = v;
+		if(-v > mx)
+			mx = -v;
+		if(u > mx)
+			mx = u;
+		if(-u > mx)
+			mx = -u;
+	}
+	if((len & 1)) {
+		v = vec[0];
+		if(v > mx)
+			mx = v;
+		if(-v > mx)
+			mx = -v;
+	}
+	return (SKP_int16) ((mx < SKP_int16_MAX) ? mx : SKP_int16_MAX);
+}
+
 #endif

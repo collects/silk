@@ -201,7 +201,6 @@ void SKP_Silk_decode_core(
 
 }
 
-#if EMBEDDED_ARM<5 
 void SKP_Silk_decode_short_term_prediction(
 SKP_int32	*vec_Q10,
 SKP_int32	*pres_Q10,
@@ -308,7 +307,6 @@ SKP_int		subfr_length
         }
 #endif
 }
-#endif
 
 
 

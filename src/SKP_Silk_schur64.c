@@ -38,7 +38,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 /* Slower than schur(), but more accurate.                              */
 /* Uses SMULL(), available on armv4                                     */ 
-#if EMBEDDED_ARM<6
 SKP_int32 SKP_Silk_schur64(                    /* O:    Returns residual energy                     */
     SKP_int32            rc_Q16[],               /* O:    Reflection coefficients [order] Q16         */
     const SKP_int32      c[],                    /* I:    Correlations [order+1]                      */
@@ -79,4 +78,3 @@ SKP_int32 SKP_Silk_schur64(                    /* O:    Returns residual energy 
 
     return C[ 0 ][ 1 ];
 }
-#endif

@@ -57,7 +57,6 @@ SKP_INLINE void SKP_Silk_A2NLSF_trans_poly(
         p[ k - 2 ] -= SKP_LSHIFT( p[ k ], 1 );
     }
 }    
-#if EMBEDDED_ARM<6
 /* Helper function for A2NLSF(..)                    */
 /* Polynomial evaluation                             */
 SKP_INLINE SKP_int32 SKP_Silk_A2NLSF_eval_poly(    /* return the polynomial evaluation, in QPoly */
@@ -76,13 +75,6 @@ SKP_INLINE SKP_int32 SKP_Silk_A2NLSF_eval_poly(    /* return the polynomial eval
     }
     return y32;
 }
-#else
-SKP_int32 SKP_Silk_A2NLSF_eval_poly(    /* return the polynomial evaluation, in QPoly */
-    SKP_int32        *p,    /* I    Polynomial, QPoly        */
-    const SKP_int32   x,    /* I    Evaluation point, Q12    */
-    const SKP_int    dd     /* I    Order                    */
-);
-#endif
 
 SKP_INLINE void SKP_Silk_A2NLSF_init(
      const SKP_int32    *a_Q16,

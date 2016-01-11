@@ -39,7 +39,6 @@ SKP_INLINE void SKP_Silk_prefilt_FIX(
     SKP_int     lag,                                    /* I Lag for harmonic shaping         */
     SKP_int     length                                  /* I Length of signals                */
 );
-#if EMBEDDED_ARM<6
 void SKP_Silk_warped_LPC_analysis_filter_FIX(
           SKP_int32                 state[],            /* I/O  State [order + 1]                       */
           SKP_int16                 res[],              /* O    Residual signal [length]                */
@@ -80,7 +79,6 @@ void SKP_Silk_warped_LPC_analysis_filter_FIX(
         res[ n ] = ( SKP_int16 )SKP_SAT16( ( SKP_int32 )input[ n ] - SKP_RSHIFT_ROUND( acc_Q11, 11 ) );
     }
 }
-#endif
 
 void SKP_Silk_prefilter_FIX(
     SKP_Silk_encoder_state_FIX          *psEnc,         /* I/O  Encoder state FIX                           */

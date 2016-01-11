@@ -37,7 +37,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "SKP_Silk_resampler_rom.h"
 
 /* Upsample by a factor 2, low quality */
-#if EMBEDDED_ARM<5
 void SKP_Silk_resampler_up2(
     SKP_int32                           *S,         /* I/O: State vector [ 2 ]                  */
     SKP_int16                           *out,       /* O:   Output signal [ 2 * len ]           */
@@ -74,4 +73,3 @@ void SKP_Silk_resampler_up2(
         out[ 2 * k + 1 ] = (SKP_int16)SKP_SAT16( SKP_RSHIFT_ROUND( out32, 10 ) );
     }
 }
-#endif

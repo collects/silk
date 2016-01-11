@@ -35,7 +35,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *                                                                          */
 #include "SKP_Silk_SigProc_FIX.h"
 
-#if EMBEDDED_ARM<5
 /* Coefficients for 2-band filter bank based on first-order allpass filters */
 // old
 static SKP_int16 A_fb1_20[ 1 ] = {  5394 << 1 };
@@ -79,4 +78,3 @@ void SKP_Silk_ana_filt_bank_1(
         outH[ k ] = (SKP_int16)SKP_SAT16( SKP_RSHIFT_ROUND( SKP_SUB32( out_2, out_1 ), 11 ) );
     }
 }
-#endif

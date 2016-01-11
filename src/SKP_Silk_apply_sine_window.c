@@ -43,7 +43,7 @@ static SKP_int16 freq_table_Q16[ 27 ] = {
     2313,    2214,    2123,    2038,    1961,    1889,    1822,    1760,    1702,
 };
 
-//#if EMBEDDED_ARM<6
+
 void SKP_Silk_apply_sine_window(
     SKP_int16                        px_win[],            /* O    Pointer to windowed signal                  */
     const SKP_int16                  px[],                /* I    Pointer to input signal                     */
@@ -117,4 +117,4 @@ void SKP_Silk_apply_sine_window(
     }
 #endif
 }
-//#endif
+

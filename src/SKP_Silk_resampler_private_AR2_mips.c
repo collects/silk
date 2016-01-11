@@ -25,54 +25,64 @@ ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ***********************************************************************/
 
-/*                                                                      *
- * SKP_sigm_Q15.c                                                       *
+/*																		*
+ * SKP_Silk_resampler_private_AR2_mips. c                                  *
+ *																		*
+ * Second order AR filter with single delay elements                	*
  *                                                                      *
- * Approximate sigmoid function                                         *
- *                                                                      *
- * Copyright 2006 (c), Skype Limited                                    *
- * Date: 060221                                                         *
+ * Copyright 2010 (c), Skype Limited                                    *
  *                                                                      */
+
 #include "SKP_Silk_SigProc_FIX.h"
-/********************************/
-/* approximate sigmoid function */
-/********************************/
-/* fprintf(1, '%d, ', round(1024 * ([1 ./ (1 + exp(-(1:5))), 1] - 1 ./ (1 + exp(-(0:5)))))); */
-static const SKP_int32 sigm_LUT_slope_Q10[ 6 ] = {
-    237, 153, 73, 30, 12, 7
-};
-/* fprintf(1, '%d, ', round(32767 * 1 ./ (1 + exp(-(0:5))))); */
-static const SKP_int32 sigm_LUT_pos_Q15[ 6 ] = {
-    16384, 23955, 28861, 31213, 32178, 32548
-};
-/* fprintf(1, '%d, ', round(32767 * 1 ./ (1 + exp((0:5))))); */
-static const SKP_int32 sigm_LUT_neg_Q15[ 6 ] = {
-    16384, 8812, 3906, 1554, 589, 219
-};
+#include "SKP_Silk_resampler_private.h"
 
-SKP_int SKP_Silk_sigm_Q15( SKP_int in_Q5 ) 
+#if defined(EMBEDDED_MIPS)
+
+#define RESAMPLER_PRIVATE_AR2(S, out, in, A, len)	\
+__asm__ volatile (	\
+  ".set push			\n\t"	\
+  ".set noreorder		\n\t"	\
+  "blez	%4, 1f			\n\t"	\
+  "lh	$10, 0(%3)		\n\t"	\
+  "lh	$11, 2(%3)		\n\t"	\
+  "lh	$12, 0(%2)		\n\t"	\
+  "lw	$8, 0(%0)		\n\t"	\
+  "lw	$9, 4(%0)		\n\t"	\
+  "sll	$10, $10, 16	\n\t"	\
+  "sll	$11, $11, 16	\n\t"	\
+  "0:					\n\t"	\
+  "sll	$12, $12, 8		\n\t"	\
+  "add	%2, %2, 2 		\n\t"	\
+  "add	$13, $12, $8	\n\t"	\
+  "sll	$14, $13, 2		\n\t"	\
+  "sw	$13, 0(%1)		\n\t"	\
+  "mult	$14, $10		\n\t"	\
+  "lh	$12, 0(%2)		\n\t"	\
+  "mfhi	$8				\n\t"	\
+  "add	%1, %1, 4		\n\t"	\
+  "mult	$14, $11		\n\t"	\
+  "addu	$8, $8, $9		\n\t"	\
+  "add	%4, %4, -1		\n\t"	\
+  "bgtz %4, 0b			\n\t"	\
+  "mfhi	$9				\n\t"	\
+  "sw	$8, 0(%0)		\n\t"	\
+  "sw	$9, 4(%0)		\n\t"	\
+  "1:					\n\t"	\
+  ".set pop				\n\t"	\
+  : "+r" (S), "+r" (out), "+r" (in), "+r" (A), "+r" (len) \
+  : : "$8", "$9", "$10", "$11", "$12", "$13", "$14")
+
+
+
+/* Second order AR filter with single delay elements */
+void SKP_Silk_resampler_private_AR2(
+	SKP_int32					    S[],		    /* I/O: State vector [ 2 ]			    	    */
+	SKP_int32					    out_Q8[],		/* O:	Output signal				    	    */
+	const SKP_int16				    in[],			/* I:	Input signal				    	    */
+	const SKP_int16				    A_Q14[],		/* I:	AR coefficients, Q14 	                */
+	SKP_int32				        len				/* I:	Signal length				        	*/
+)
 {
-    SKP_int ind;
-
-    if( in_Q5 < 0 ) {
-        /* Negative input */
-        in_Q5 = -in_Q5;
-        if( in_Q5 >= 6 * 32 ) {
-            return 0;        /* Clip */
-        } else {
-            /* Linear interpolation of look up table */
-            ind = SKP_RSHIFT( in_Q5, 5 );
-            return( sigm_LUT_neg_Q15[ ind ] - SKP_SMULBB( sigm_LUT_slope_Q10[ ind ], in_Q5 & 0x1F ) );
-        }
-    } else {
-        /* Positive input */
-        if( in_Q5 >= 6 * 32 ) {
-            return 32767;        /* clip */
-        } else {
-            /* Linear interpolation of look up table */
-            ind = SKP_RSHIFT( in_Q5, 5 );
-            return( sigm_LUT_pos_Q15[ ind ] + SKP_SMULBB( sigm_LUT_slope_Q10[ ind ], in_Q5 & 0x1F ) );
-        }
-    }
+	RESAMPLER_PRIVATE_AR2(S, out_Q8, in, A_Q14, len);
 }
-
+#endif

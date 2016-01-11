@@ -31,7 +31,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define QS  14
 
 
-#if EMBEDDED_ARM<6
 /* Autocorrelations for a warped frequency axis */
 void SKP_Silk_warped_autocorrelation_FIX(
           SKP_int32                 *corr,              /* O    Result [order + 1]                      */
@@ -84,5 +83,4 @@ void SKP_Silk_warped_autocorrelation_FIX(
     }
     SKP_assert( corr_QC[ 0 ] >= 0 ); // If breaking, decrease QC
 }
-#endif
 

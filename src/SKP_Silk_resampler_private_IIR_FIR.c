@@ -36,7 +36,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "SKP_Silk_SigProc_FIX.h"
 #include "SKP_Silk_resampler_private.h"
-#if EMBEDDED_ARM<5
 SKP_INLINE SKP_int16 *SKP_Silk_resampler_private_IIR_FIR_INTERPOL( 
 			SKP_int16 * out, SKP_int16 * buf, SKP_int32 max_index_Q16 , SKP_int32 index_increment_Q16 ){
 	SKP_int32 index_Q16, res_Q15;
@@ -57,10 +56,6 @@ SKP_INLINE SKP_int16 *SKP_Silk_resampler_private_IIR_FIR_INTERPOL(
 	}
 	return out;	
 }
-#else
-extern SKP_int16 *SKP_Silk_resampler_private_IIR_FIR_INTERPOL( 
-			SKP_int16 * out, SKP_int16 * buf, SKP_int32 max_index_Q16 , SKP_int32 index_increment_Q16 );
-#endif
 /* Upsample using a combination of allpass-based 2x upsampling and FIR interpolation */
 void SKP_Silk_resampler_private_IIR_FIR(
 	void	                        *SS,		    /* I/O: Resampler state 						*/

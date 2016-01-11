@@ -40,7 +40,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 /*        * len should be positive 16bit integer.                               */
 /*        * only when len>6, memory access can be reduced by half.              */
 
-#if (EMBEDDED_ARM<5) 
+#if (!defined(EMBEDDED_MIPS))
 SKP_int32 SKP_Silk_inner_prod_aligned(
     const SKP_int16* const inVec1,  /*    I input vector 1    */
     const SKP_int16* const inVec2,  /*    I input vector 2    */
@@ -56,7 +56,7 @@ SKP_int32 SKP_Silk_inner_prod_aligned(
 }
 #endif
 
-#if (EMBEDDED_ARM<5) 
+#if (!defined(EMBEDDED_MIPS))
 SKP_int64 SKP_Silk_inner_prod16_aligned_64(
     const SKP_int16 *inVec1,        /*    I input vector 1    */ 
     const SKP_int16 *inVec2,        /*    I input vector 2    */

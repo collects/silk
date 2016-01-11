@@ -26,7 +26,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ***********************************************************************/
 
 /*                                                                      *
- * SKP_Silk_resampler_down2.c                                         *
+ * SKP_Silk_resampler_down2_mips.c                                         *
  *                                                                      *
  * Downsample by a factor 2, mediocre quality                           *
  *                                                                      *
@@ -36,7 +36,55 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "SKP_Silk_SigProc_FIX.h"
 #include "SKP_Silk_resampler_rom.h"
 
-#if (!defined(EMBEDDED_MIPS))
+
+#if defined(EMBEDDED_MIPS)
+
+#define RESAMPLER_DOWN2(S, out, in, len)	\
+__asm__ volatile (	\
+  ".set push			\n\t"	\
+  ".set noreorder		\n\t"	\
+  "blez	%3, 1f			\n\t"	\
+  "lw	$8, 0(%0)		\n\t"	\
+  "lw	$9, 4(%0)		\n\t"	\
+  "lui	$10, 0x2690		\n\t"	\
+  "lui	$11, 0x9B81		\n\t"	\
+  "0:					\n\t"	\
+  "lh	$12, 0(%2)		\n\t"	\
+  "lh	$13, 2(%2)		\n\t"	\
+  "add	%3, %3, -2		\n\t"	\
+  "add	%2, %2, 4		\n\t"	\
+  "sll	$12, $12, 10	\n\t"	\
+  "sll	$13, $13, 10	\n\t"	\
+  "subu	$14, $12, $8	\n\t"	\
+  "subu	$15, $13, $9	\n\t"	\
+  "mult	$14, $11		\n\t"	\
+  "mfhi	$16				\n\t"	\
+  "mult	$15, $10		\n\t"	\
+  "mfhi	$17				\n\t"	\
+  "addu	$16, $16, $14 	\n\t"	\
+  "addu	$14, $16, $8 	\n\t"	\
+  "addu	$15, $17, $9 	\n\t"	\
+  "addu	$8, $16, $12	\n\t"	\
+  "addu	$9, $17, $13	\n\t"	\
+  "addu	$14, $14, $15	\n\t"	\
+  "addu $14, $14, 1024	\n\t"	\
+  "li	$16, 0x7FFF 	\n\t"	\
+  "li	$17, 0x8000		\n\t"	\
+  "sra	$14, $14, 11	\n\t"	\
+  "slti	$12, $14, 0x7FFF	\n\t"	\
+  "slti	$13, $14, 0x8000	\n\t"	\
+  "movz	$14, $16, $12	\n\t"   \
+  "movn	$14, $17, $13	\n\t"   \
+  "add	%1, %1, 2 	\n\t"	\
+  "bgtz	%3, 0b			\n\t"   \
+  "sh	$14, -2(%1)	\n\t"	\
+  "sw	$8, 0(%0)		\n\t"	\
+  "sw	$9, 4(%0)		\n\t"	\
+  "1:					\n\t"	\
+  ".set pop				\n\t"	\
+  : "+r" (S), "+r" (out), "+r" (in), "+r" (len) \
+  : : "$8", "$9", "$10", "$11", "$12", "$13", "$14", "$15", "$16", "$17")
+
 /* Downsample by a factor 2, mediocre quality */
 void SKP_Silk_resampler_down2(
     SKP_int32                           *S,         /* I/O: State vector [ 2 ]                  */
@@ -45,35 +93,6 @@ void SKP_Silk_resampler_down2(
     SKP_int32                           inLen       /* I:   Number of input samples             */
 )
 {
-    SKP_int32 k, len2 = SKP_RSHIFT32( inLen, 1 );
-    SKP_int32 in32, out32, Y, X;
-
-    SKP_assert( SKP_Silk_resampler_down2_0 > 0 );
-    SKP_assert( SKP_Silk_resampler_down2_1 < 0 );
-
-    /* Internal variables and state are in Q10 format */
-    for( k = 0; k < len2; k++ ) {
-        /* Convert to Q10 */
-        in32 = SKP_LSHIFT( (SKP_int32)in[ 2 * k ], 10 );
-
-        /* All-pass section for even input sample */
-        Y      = SKP_SUB32( in32, S[ 0 ] );
-        X      = SKP_SMLAWB( Y, Y, SKP_Silk_resampler_down2_1 );
-        out32  = SKP_ADD32( S[ 0 ], X );
-        S[ 0 ] = SKP_ADD32( in32, X );
-
-        /* Convert to Q10 */
-        in32 = SKP_LSHIFT( (SKP_int32)in[ 2 * k + 1 ], 10 );
-
-        /* All-pass section for odd input sample, and add to output of previous section */
-        Y      = SKP_SUB32( in32, S[ 1 ] );
-        X      = SKP_SMULWB( Y, SKP_Silk_resampler_down2_0 );
-        out32  = SKP_ADD32( out32, S[ 1 ] );
-        out32  = SKP_ADD32( out32, X );
-        S[ 1 ] = SKP_ADD32( in32, X );
-
-        /* Add, convert back to int16 and store to output */
-        out[ k ] = (SKP_int16)SKP_SAT16( SKP_RSHIFT_ROUND( out32, 11 ) );
-    }
+	RESAMPLER_DOWN2(S, out, in, inLen);
 }
 #endif

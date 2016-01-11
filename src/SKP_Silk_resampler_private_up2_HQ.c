@@ -39,7 +39,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 /* Upsample by a factor 2, high quality */
 /* Uses 2nd order allpass filters for the 2x upsampling, followed by a      */
 /* notch filter just above Nyquist.                                         */
-#if (EMBEDDED_ARM<5) 
+#if (!defined(EMBEDDED_MIPS))
 void SKP_Silk_resampler_private_up2_HQ(
 	SKP_int32	                    *S,			    /* I/O: Resampler state [ 6 ]					*/
     SKP_int16                       *out,           /* O:   Output signal [ 2 * len ]               */

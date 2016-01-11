@@ -34,7 +34,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  * Copyright 2006-2008 (c), Skype Limited                               *
  *                                                                      */
 #include "SKP_Silk_SigProc_FIX.h"
-#if (EMBEDDED_ARM<5) 
+#if (!defined(EMBEDDED_MIPS))
 /* Compute number of bits to right shift the sum of squares of a vector */
 /* of int16s to make it fit in an int32                                 */
 void SKP_Silk_sum_sqr_shift(

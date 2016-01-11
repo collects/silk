@@ -25,25 +25,17 @@ CP     = $(TOOLCHAIN_PREFIX)cp
 cppflags-from-defines 	= $(addprefix -D,$(1))
 cppflags-from-includes 	= $(addprefix -I,$(1))
 ldflags-from-ldlibdirs 	= $(addprefix -L,$(1))
-ldlibs-from-libs        = $(addprefix -l,$(1))
+ldlibs-from-libs 	= $(addprefix -l,$(1))
 
-ifneq (,$(TARGET_CPU))
-	CFLAGS	+= -mcpu=$(TARGET_CPU)
-	ifneq (,$(TARGET_TUNE))
-		CFLAGS	+= -mtune=$(TARGET_TUNE)
-	else
-		CFLAGS	+= -mtune=$(TARGET_CPU)
-	endif
+
+# Helper to make MIPS Big Endian testing easier
+ifeq (yes,$(MIPS))
+	CFLAGS += -D_SYSTEM_IS_BIG_ENDIAN -meb -mips32
 endif
-ifneq (,$(TARGET_FPU))
-	CFLAGS += -mfpu=$(TARGET_FPU)
-endif
-ifneq (,$(TARGET_ARCH))
-	CFLAGS	+= -march=$(TARGET_ARCH)
-endif
-# Helper to make NEON testing easier, when using USE_NEON=yes do not set TARGET_CPU or TARGET_FPU
-ifeq (yes,$(USE_NEON))
-	CFLAGS += -mcpu=cortex-a8 -mfloat-abi=softfp -mfpu=neon
+
+ifeq (yes,$(MIPSEL))
+	CFLAGS += -mel -mips32
+	LDFLAGS += -mel -mips32
 endif
 
 

@@ -36,7 +36,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "SKP_Silk_SigProc_FIX.h"
 #include "SKP_Silk_resampler_private.h"
 
-#if (EMBEDDED_ARM<5)  
+#if (!defined(EMBEDDED_MIPS)) 
 /* Second order AR filter with single delay elements */
 void SKP_Silk_resampler_private_AR2(
 	SKP_int32					    S[],		    /* I/O: State vector [ 2 ]			    	    */
